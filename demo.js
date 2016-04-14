@@ -7,7 +7,7 @@ if (canvas.getContext) {
 var board = new AiBoard(ctx);
 
 function redAi(board) {
-   return { action: 'move', x: this.x+1, y: this.y };
+   return { action: 'clone', x: this.x+1, y: this.y };
 }
 
 function blueAi(board) {
