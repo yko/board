@@ -24,7 +24,7 @@ var AiBoard = function (ctx, options) {
             this.generation[i] = [];
     }
 
-    this.Unit = function (options) {
+    var Unit = this.Unit = function (options) {
         var defaults = {
             x: 0,
             y: 0,
@@ -34,10 +34,11 @@ var AiBoard = function (ctx, options) {
         mergeConf(defaults, options, this);
 
         this.clone = function () {
-            return new this.Unit({
+            return new Unit({
                 x: this.x,
                 y: this.y,
-                color: this.color
+                color: this.color,
+                ai: this.ai,
             });
         };
         this.isEnemy = function (color) {
@@ -96,7 +97,7 @@ var AiBoard = function (ctx, options) {
     };
 
     this.addUnit = function (options) {
-        var unit = new this.Unit(options);
+        var unit = new Unit(options);
         this.generation[unit.x][unit.y] = unit;
         return unit;
     };
