@@ -2,4 +2,4 @@ name: Simple Canvas Board
 description: available via http://jsfiddle.net/gh/mootools/1.2/yko/board/tree/master/
 authors:
   - yko
-wrap: b
+wrap: l
