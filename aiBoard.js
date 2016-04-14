@@ -34,7 +34,11 @@ var AiBoard = function (ctx, options) {
         mergeConf(defaults, options, this);
 
         this.clone = function () {
-            return this; // I'm lazy
+            return new this.Unit({
+                x: this.x,
+                y: this.y,
+                color: this.color
+            });
         };
         this.isEnemy = function (color) {
             return color != this.color;
