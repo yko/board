@@ -46,6 +46,33 @@ var AiBoard = function (ctx, options) {
         };
     };
 
+    this.drawOneStep = function () {
+        var board = this;
+        var result = board.oneRound();
+        this.drawDebugOverlay(result.overlay);
+        setTimeout(function() {
+            board.redraw();
+        }, 500);
+    };
+
+    this.stopTheGame = function () {
+        clearInterval(this.gameInterval);
+        this.gameInterval = undefined;
+    };
+    this.runTheGame = function () {
+        if (this.gameInterval)
+            throw "The game is already running";
+        var board = this;
+
+        this.gameInterval = setInterval(function() {
+            board.drawOneStep();
+        }, 1000);
+    };
+
+    this.isGameRunning = function () {
+        return typeof this.gameInterval !== 'undefined';
+    };
+
     this.clear = function () {
         this.ctx.clearRect(
             0,
@@ -59,6 +86,53 @@ var AiBoard = function (ctx, options) {
         this.clear();
         this.drawGrid();
         this.drawGeneration(this.generation);
+    };
+
+    this.drawDebugOverlay = function (overlay) {
+        for (var x = 0; x < this.x_size; x++) {
+            for (var y = 0; y < this.y_size; y++) {
+                for (var j = 0; j < overlay[x][y].length; j++) {
+                    var item = overlay[x][y][j];
+                    try {
+                        item.call(item, x, y);
+                    } catch (e) {
+                        console.log("Debug overlay error from " + x + ", " + y + ": ", e);
+                    };
+                }
+            }
+        }
+    };
+
+    this.overlayArrow = function (to_x, to_y, color) {
+        var board = this;
+        var ctx = board.ctx;
+        return function (x, y) {
+            var start = {
+                x: board.cell_size * x + board.border_width * x + board.cell_size / 2,
+                y: board.cell_size * y + board.border_width * y + board.cell_size / 2
+            };
+            var end = {
+                x: start.x + (to_x > x ? board.cell_size : to_x < x ? -board.cell_size : 0),
+                y: start.y + (to_y > y ? board.cell_size : to_y < y ? -board.cell_size : 0)
+            };
+            var endRadians = Math.atan((end.y - start.y) / (end.x - start.x));
+            endRadians += ((end.x >= start.x) ? 90 : -90) * Math.PI / 180;
+            ctx.save();
+            ctx.strokeStyle = "white";
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.moveTo(start.x, start.y);
+            ctx.lineTo(end.x, end.y);
+            ctx.translate(end.x, end.y);
+            ctx.rotate(endRadians);
+            ctx.lineTo(3, 10);
+            ctx.lineTo(-3, 10);
+            ctx.lineTo(0, 0);
+            ctx.closePath();
+            ctx.stroke();
+            ctx.fill();
+            ctx.restore();
+        };
     };
 
     this.drawGeneration = function () {
@@ -105,6 +179,7 @@ var AiBoard = function (ctx, options) {
     this.oneRound = function(generation) {
         var result = this.calculateRound(this.generation);
         this.generation = result.generation;
+        return result;
     };
 
     this.calculateRound = function(generation) {
@@ -140,16 +215,18 @@ var AiBoard = function (ctx, options) {
                     } else if (move.action === 'clone') {
                         next_generation[x][y].push(generation[x][y]);
                         var cloned = generation[x][y].clone();
-                        cloned.x = move.x;
-                        cloned.y = move.y;
+                        cloned.x = move.x, cloned.y = move.y;
                         next_generation[move.x][move.y].push(cloned);
+                        overlay[x][y].push(this.overlayArrow(move.x, move.y, 'green'));
                     } else if (move.action === 'move') {
                         generation[x][y].x = move.x;
                         generation[x][y].y = move.y;
                         next_generation[move.x][move.y].push(generation[x][y]);
+                        overlay[x][y].push(this.overlayArrow(move.x, move.y, 'black'));
                     } else if (move.action === 'attack') {
                         next_generation[x][y].push(generation[x][y]);
                         attack_matrix[move.x][move.y].push({ from: { x: x, y: y } });
+                        overlay[x][y].push(this.overlayArrow(move.x, move.y, 'red'));
                     }
                 } catch (e) {
                     console.log("Unit at " + x + ", " + y + ".  pdoruced an error", e);

@@ -20,21 +20,15 @@ board.addUnit({x: 8, y: 8, color: 'blue', ai: blueAi });
 board.redraw();
 
 step.addEventListener("click", function() {
-  board.oneRound();
-  board.redraw();
+    board.drawOneStep();
 });
 
-var interval_id;
 run.addEventListener("click", function() {
-  if (interval_id) {
-    clearInterval(interval_id);
-    interval_id = undefined;
-    run.value = "Run";
-  } else {
-    interval_id = setInterval(function() {
-      board.oneRound();
-      board.redraw();
-    }, 1000);
-    run.value = "Stop";
-  }
+    if (board.isGameRunning()) {
+        board.stopTheGame();
+        run.value = "Start";
+    } else {
+        board.runTheGame();
+        run.value = "Stop";
+    }
 });
